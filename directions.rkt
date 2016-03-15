@@ -1,0 +1,15 @@
+(define (slist->string l)
+  (string-join (map symbol->string l)))
+
+(define (get-directions id)
+  (let ((record (assq id decisiontable)))
+    (let* ((result (filter (lambda (n) (number? (second n))) (cdr record)))
+           (n (length result)))
+      (cond ((= 0 n)
+             (printf "You appear to have entered a room with no exits.\n"))
+            ((= 1 n)
+             (printf "You can see an exit to the ~a.\n" (slist->string (caar result))))
+            (else
+             (let* ((losym (map (lambda (x) (car x)) result))
+                    (lostr (map (lambda (x) (slist->string x)) losym)))
+               (printf "You can see exits to the ~a.\n" (string-join lostr " and "))))))))
