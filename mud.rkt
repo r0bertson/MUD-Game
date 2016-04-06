@@ -2,35 +2,90 @@
 
 (include "assoc.rkt")
 (include "directions.rkt")
+(include "objects.rkt")
 
 (require srfi/1)
 (require srfi/13)
 (require srfi/48)
 
+;;START OF OBJECTS FUNCTIONS
+
+(define objectdb (make-hash)) 
+(define inventorydb (make-hash))
+
+(define (add-object db id object)
+   (if (hash-has-key? db id)
+        (let ((record (hash-ref db id)))
+           (hash-set! db id (cons object record )))
+        (hash-set! db id (cons object empty ))))
+
+(define (add-objects db)
+   (for-each
+     (lambda (r)
+        (add-object db (first r) (second r))) objects))
+
+(add-objects objectdb)
+
+(define (display-objects db id)
+   (when (hash-has-key? db id)
+      (let* ((record (hash-ref db id))
+               (output (string-join record " and ")))
+         (when (not (equal? output ""))
+            (if (eq? id 'bag )
+                 (printf "You are carrying ~a.\n" output)
+                 (printf "You can see ~a.\n " output))))))
+
+
+(define (remove-object-from-room db id str)
+   (when (hash-has-key? db id )
+      (let* ((record (hash-ref db id))
+               (result (remove (lambda (x) (string-suffix-ci? str x)) record ))
+               (item (lset-difference equal? record result )))
+         (cond ((null? item)
+                 (printf "I don't see that item in the room !\n" ))
+                (else
+                  (printf "Added ~a to your bag .\n" ( first item ))
+                  (add-object inventorydb 'bag ( first item ))
+                  (hash-set! db id result))))))
+
+(define (remove-object-from-inventory db id str )
+   (when (hash-has-key? db 'bag )
+      (let* ((record (hash-ref db 'bag))
+               (result (remove (lambda (x) (string-suffix-ci? str x )) record ))
+               (item ( lset-difference equal? record result )))
+         (cond ((null? item )
+                 ( printf "You are not carrying that item !\n"))
+                ( else
+                  (printf "Removed ~ a from your bag .\n" (first item))
+                  (add-object objectdb id (first item))
+                  (hash-set! db 'bag result))))))
+
+(define (pick-item id input)
+   (let ((item (string-join (cdr (string-split input)))))
+      ( remove-object-from-room objectdb id item )))
+
+(define (put-item id input)
+   (let ((item (string-join (cdr (string-split input)))))
+      (remove-object-from-inventory inventorydb id item)))
+
+(define (display-inventory)
+   (display-objects inventorydb 'bag))
+
+
+;;END OF OBJECTS FUNCTIONS
 
 
 
-
-;(define (get-directions id)
-;  (let ((record (assq id decisiontable)))
-;    (let ((result (filter (lambda (n) (number? (second n))) (cdr record))))
-;      (printf "You can see exits to the ")nor
-;      (for-each (lambda (direction) (printf "~a " (first direction))) result))
-;      (printf "\n")))
-
-
-
-(define (assq-ref assqlist id)
-  (cdr (assq id assqlist)))
-
-(define (assv-ref assqlist id)
-  (cdr (assv id assqlist)))
+;;refactored functions assq-ref and assv-ref into only one ass-ref
+;; we pass what we want as parameter (assq or assv)
+(define (ass-ref assqlist id x)
+  (cdr (x id assqlist)))
 
 (define (get-response id)
-  (car (assq-ref descriptions id)))
+  (car (ass-ref descriptions id assq)))
 
 (define (get-keywords id)
-  (let ((keys (assq-ref decisiontable id)))
+  (let ((keys (ass-ref decisiontable id assq)))
     (map (lambda (key) (car key)) keys)))
 
 
@@ -51,7 +106,7 @@
 
 
 (define (lookup id tokens)
-  (let* ((record (assv-ref decisiontable id))
+  (let* ((record (ass-ref decisiontable id assv))
          (keylist (get-keywords id))
          (index (index-of-largest-number (list-of-lengths keylist tokens))))
     (if index 
@@ -75,6 +130,16 @@
                (loop id #f))
               ((eq? response 'look)
                (get-directions id)
+               (display-objects objectdb id)
+               (loop id #f))
+              ((eq? response 'pick)
+               (pick-item id input)
+               (loop id #f))
+              ((eq? response 'inventory)
+               (display-inventory)
+               (loop id #f))
+              ((eq? response 'put)
+               (put-item id input)
                (loop id #f))
               ((eq? response 'quit)
                (format #t "So Long, and Thanks for All the Fish...\n")
