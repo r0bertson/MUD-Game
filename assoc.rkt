@@ -2,6 +2,21 @@
                        (2 "You are in the hallway")
                        (3 "You are in a swamp")))
 
+
+
+(define room-type '((0 "Entrance")
+                    (1 "hall")
+                    (2 "hallway")
+                    (3 "corridor")
+                    (4 "lobby" )
+                    (5 "hallway")
+                    (6 "court" )
+                    (7 "pass" )))
+
+
+(define objects '((1 "a silver dagger")
+                  (1 "a gold coin")))
+
 (define look '(((directions) look) ((look) look) ((examine room) look)))
 
 (define quit '(((exit game) quit) ((quit game) quit) ((exit) quit) ((quit) quit)))
@@ -18,5 +33,10 @@
 (define actions `(,@look ,@quit ,@pick ,@put ,@inventory))
 
 (define decisiontable `((1 ((north) 2) ((north west) 3) ,@actions)
-                         (2 ((south) 1) ,@actions )
-                         (3 ,@actions)))
+                        (2 ((south) 1) ,@actions )
+                        (3 ,@actions)))
+
+
+
+;; new functions to the maze
+

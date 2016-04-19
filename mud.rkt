@@ -3,25 +3,44 @@
 (include "assoc.rkt")
 (include "directions.rkt")
 (include "objects.rkt")
+(include "maze.rkt")
 
 (require srfi/1)
 (require srfi/13)
 (require srfi/48)
 
+
+
+;; MAZE THINGS
+
+
+(define rooms (make-hash))
+(define m (build-maze X Y))
+
+(define (assq-ref assqlist id)
+  (cadr (assq id assqlist)))
+
+(define (room-allocator db types)
+  (for ((j X))
+    (for ((i Y))
+      (hash-set! db (list j i) (assq-ref types (random (- (length types) 1)))))))
+
+(room-allocator rooms room-type) ;;allocate names to the rooms
+
 ;;START OF OBJECTS FUNCTIONS
 
-(define objectdb (make-hash)) 
-(define inventorydb (make-hash))
+(define objectdb (make-hash))  ;;define object hash
+(define inventorydb (make-hash)) ;;define bag hash
 
-(add-objects objectdb)
-
-
+(add-objects objectdb) ;;insert objects in the object hash
 
 
 ;;refactored functions assq-ref and assv-ref into only one ass-ref
 ;; we pass what we want as parameter (assq or assv)
 (define (ass-ref assqlist id x)
   (cdr (x id assqlist)))
+;;old version
+
 
 (define (get-response id)
   (car (ass-ref descriptions id assq)))
@@ -47,16 +66,16 @@
       (list-index (lambda (x) (eq? x n)) list-of-numbers))))
 
 
-(define (lookup id tokens)
-  (let* ((record (ass-ref decisiontable id assv))
-         (keylist (get-keywords id))
-         (index (index-of-largest-number (list-of-lengths keylist tokens))))
-    (if index 
-      (cadr (list-ref record index))
-      #f)))
+;;(define (lookup id tokens)
+ ;; (let* ((record (ass-ref decisiontable id assv))
+ ;;        (keylist (get-keywords id))
+ ;;        (index (index-of-largest-number (list-of-lengths keylist tokens))))
+  ;;  (if index 
+  ;;    (cadr (list-ref record index))
+   ;;   #f)))
 
 
-(define (startgame initial-id)
+(define (startgame-old initial-id)
   (let loop ((id initial-id) (description #t))
     (if description
         (printf "~a\n> " (get-response id))
@@ -94,4 +113,28 @@
                (exit)))))))
 
 
-(startgame 1)
+
+
+
+(define (startgame-new room-id)
+  (let loop ((rid room-id))
+    (show-maze m rid)
+    (printf "You are in the ~a \n>" (hash-ref rooms rid))
+    (let ((input (read)))
+      (cond [(eq? input 'quit) (exit)]) ;; help with paths
+      (if (member input (paths rid))
+          (let ((direction (lookup rid input)))
+          (cond ((equal? rid direction) (loop rid))
+                ((equal? direction (list (- X 1) (- Y 1)))
+                 (show-maze m direction)
+                 (displayln "You have reached the exit door.")
+                 (exit))
+                (else
+                 (loop direction))))
+      (begin
+        (printf "huh? I did not understand ~a \n" input)
+        (loop rid))))))
+    
+
+
+(startgame-new start)
