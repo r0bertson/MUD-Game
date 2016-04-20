@@ -65,16 +65,27 @@
       #f
       (list-index (lambda (x) (eq? x n)) list-of-numbers))))
 
+(define (lookup room direction)
+  (cond [(eq? (car direction) 'south)
+         (move-x room +)]
+        [(eq? (car direction) 'north)
+         (move-x room -)]
+        [(eq? (car direction) 'west)
+         (move-y room -)]
+        [(eq? (car direction) 'east)
+         (move-y room +)]
+        [(call-actions room direction)]))
 
-;;(define (lookup id tokens)
- ;; (let* ((record (ass-ref decisiontable id assv))
- ;;        (keylist (get-keywords id))
- ;;        (index (index-of-largest-number (list-of-lengths keylist tokens))))
-  ;;  (if index 
-  ;;    (cadr (list-ref record index))
-   ;;   #f)))
 
+(define (call-actions id tokens)
+ (let* ((record (ass-ref decisiontable id assv))
+        (keylist (get-keywords id))
+        (index (index-of-largest-number (list-of-lengths keylist tokens))))
+  (if index 
+    (cadr (list-ref record index))
+   #f)))
 
+;; ADVANCED COMMAND LINE PROCESSOR, WITHOUT MAZE
 (define (startgame-old initial-id)
   (let loop ((id initial-id) (description #t))
     (if description
@@ -114,6 +125,45 @@
 
 
 
+;; ADVANCED COMMAND LINE PROCESSOR WITH MAZE
+(define (startgame-maze start)
+  (let loop ((rid start))
+       (show-maze m rid)
+       (printf "You are in the ~a \n>" (hash-ref rooms rid))
+    (let* ((input (read-line))
+           (string-tokens (string-tokenize input))
+           (tokens (map string->symbol string-tokens))
+           (response (lookup rid tokens)))
+        (cond ((member (car tokens) (paths rid))
+              (let ((direction response))
+                (cond ((equal? rid direction) (loop rid))
+                      ((equal? direction (list (- X 1) (- Y 1)))
+                       (show-maze m direction)
+                       (displayln "You have reached the exit door.")
+                       (exit))
+                      (else
+                       (loop direction)))))
+              
+              ((eq? #f tokens)
+               (format #t "huh? I didn't understand that!\n")
+               (loop rid))
+              
+              ((eq? response 'look)
+               (display-objects objectdb 1)
+               (loop rid))
+              
+              ((eq? response 'pick)
+               (pick-item 1 input)
+               (loop rid))
+              
+              ((eq? response 'inventory)
+               (display-inventory)
+               (loop rid))
+              
+              ((eq? response 'drop)
+               (put-item rid input)
+               (loop rid))))))
+
 
 
 (define (startgame-new room-id)
@@ -137,4 +187,5 @@
     
 
 
-(startgame-new start)
+;;(startgame-new start)
+(startgame-maze start)

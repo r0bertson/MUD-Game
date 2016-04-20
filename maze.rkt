@@ -2,6 +2,8 @@
 (define X 5)
 (define Y 5)
 (define start '(0 0))
+
+
 ; ; include maze algorithm with X and Y as M and N .
 
 (define (paths start)
@@ -79,15 +81,7 @@
 (define (move-y room fun)
   (cons (fun (car room) 1) (cdr room)))
 
-(define (lookup room direction)
-  (cond [(eq? direction 'south)
-         (move-x room +)]
-        [(eq? direction 'north)
-         (move-x room -)]
-        [(eq? direction 'west)
-         (move-y room -)]
-        [(eq? direction 'east)
-         (move-y room +)]))
+
 
 
 
