@@ -13,26 +13,34 @@
 
 ;; MAZE THINGS
 
+(define objectdb (make-hash))  ;;define object hash
+(define inventorydb (make-hash)) ;;define bag hash
+(define rooms (make-hash)) ;; define hash for carry the rooms names
 
-(define rooms (make-hash))
-(define m (build-maze X Y))
 
 (define (assq-ref assqlist id)
   (cadr (assq id assqlist)))
 
-(define (room-allocator db types)
+(define m (build-maze X Y))
+
+
+(define (random-allocator db types rate)
   (for ((j X))
     (for ((i Y))
-      (hash-set! db (list j i) (assq-ref types (random (- (length types) 1)))))))
+      (cond ((<= (random 100) rate)
+             (cond((equal? db rooms)
+                 (hash-set! db (list j i) (assq-ref types (random (- (length types) 1)))))
+                  (else
+                 (add-object db (list j i) (assq-ref types (random (- (length types) 1)))))))))))
+ 
 
-(room-allocator rooms room-type) ;;allocate names to the rooms
-
+(random-allocator rooms room-type 100)   ;;allocate names to the rooms
+(random-allocator objectdb objects 50)  ;;allocate items to the rooms
 ;;START OF OBJECTS FUNCTIONS
 
-(define objectdb (make-hash))  ;;define object hash
-(define inventorydb (make-hash)) ;;define bag hash
 
-(add-objects objectdb) ;;insert objects in the object hash
+
+;;insert objects in the object hash
 
 
 ;;refactored functions assq-ref and assv-ref into only one ass-ref
@@ -42,8 +50,8 @@
 ;;old version
 
 
-(define (get-response id)
-  (car (ass-ref descriptions id assq)))
+;;(define (get-response id)
+;;  (car (ass-ref descriptions id assq)))
 
 (define (get-keywords id)
   (let ((keys (ass-ref decisiontable id assq)))
@@ -66,68 +74,69 @@
       (list-index (lambda (x) (eq? x n)) list-of-numbers))))
 
 (define (lookup room direction)
-  (cond [(eq? (car direction) 'south)
+  (cond [(eq? direction 'south)
          (move-x room +)]
-        [(eq? (car direction) 'north)
+        [(eq? direction 'north)
          (move-x room -)]
-        [(eq? (car direction) 'west)
+        [(eq? direction 'west)
          (move-y room -)]
-        [(eq? (car direction) 'east)
+        [(eq? direction 'east)
          (move-y room +)]
         [(call-actions room direction)]))
 
 
 (define (call-actions id tokens)
- (let* ((record (ass-ref decisiontable id assv))
-        (keylist (get-keywords id))
+ (let* ((record (ass-ref decisiontable 1 assv))
+        (keylist (get-keywords 1))
         (index (index-of-largest-number (list-of-lengths keylist tokens))))
   (if index 
     (cadr (list-ref record index))
    #f)))
 
-;; ADVANCED COMMAND LINE PROCESSOR, WITHOUT MAZE
-(define (startgame-old initial-id)
-  (let loop ((id initial-id) (description #t))
-    (if description
-        (printf "~a\n> " (get-response id))
-        (printf "> "))
-    (let* ((input (read-line))
-           (string-tokens (string-tokenize input))
-           (tokens (map string->symbol string-tokens)))
-      (let ((response (lookup id tokens)))
-        (cond ((number? response)
-               (loop response #t))
-              
-              ((eq? #f response)
-               (format #t "huh? I didn't understand that!\n")
-               (loop id #f))
-              
-              ((eq? response 'look)
-               (get-directions id)
-               (display-objects objectdb id)
-               (loop id #f))
-              
-              ((eq? response 'pick)
-               (pick-item id input)
-               (loop id #f))
-              
-              ((eq? response 'inventory)
-               (display-inventory)
-               (loop id #f))
-              
-              ((eq? response 'drop)
-               (put-item id input)
-               (loop id #f))
-              
-              ((eq? response 'quit)
-               (format #t "So Long, and Thanks for All the Fish...\n")
-               (exit)))))))
+;;; ADVANCED COMMAND LINE PROCESSOR, WITHOUT MAZE
+;;;(define (startgame-old initial-id)
+;;;  (let loop ((id initial-id) (description #t))
+;    (if description
+;       ;; (printf "~a\n> " (get-response id))
+;        (printf "> "))
+;    (let* ((input (read-line))
+;           (string-tokens (string-tokenize input))
+;           (tokens (map string->symbol string-tokens)))
+;      (let ((response (lookup id tokens)))
+;        (cond ((number? response)
+;               (loop response #t))
+;              
+;              ((eq? #f response)
+;               (format #t "huh? I didn't understand that!\n")
+;               (loop id #f))
+;              
+;              ((eq? response 'look)
+;               (get-directions id)
+;               (display-objects objectdb id)
+;               (loop id #f))
+;              
+;              ((eq? response 'pick)
+;               (pick-item id input)
+;               (loop id #f))
+;              
+;              ((eq? response 'inventory)
+;               (display-inventory)
+;               (loop id #f))
+;              
+;              ((eq? response 'drop)
+;               (put-item id input)
+;               (loop id #f))
+;              
+;              ((eq? response 'quit)
+;               (format #t "So Long, and Thanks for All the Fish...\n")
+;               (exit)))))))
 
 
 
 ;; ADVANCED COMMAND LINE PROCESSOR WITH MAZE
 (define (startgame-maze start)
   (let loop ((rid start))
+    (printf "ROOM ID:  ~a \n>" rid)
        (show-maze m rid)
        (printf "You are in the ~a \n>" (hash-ref rooms rid))
     (let* ((input (read-line))
@@ -144,24 +153,28 @@
                       (else
                        (loop direction)))))
               
-              ((eq? #f tokens)
+              ((eq? #f response)
                (format #t "huh? I didn't understand that!\n")
                (loop rid))
               
               ((eq? response 'look)
-               (display-objects objectdb 1)
+               (display-objects objectdb rid)
                (loop rid))
               
               ((eq? response 'pick)
-               (pick-item 1 input)
+               (handle-item 'room rid input)
                (loop rid))
               
               ((eq? response 'inventory)
                (display-inventory)
                (loop rid))
               
+              ((eq? response 'quit)
+               (format #t "So Long, and Thanks for All the Fish...\n")
+               (exit))
+            
               ((eq? response 'drop)
-               (put-item rid input)
+               (handle-item 'bag rid input)
                (loop rid))))))
 
 

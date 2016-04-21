@@ -5,7 +5,7 @@
   (if (hash-has-key? db id)
       (let ((record (hash-ref db id)))
         (hash-set! db id (cons object record)))
-      (hash-set! db id (cons object empty ))))
+      (hash-set! db id (cons object empty))))
 
 (define (add-objects db)
   (for-each
@@ -14,13 +14,19 @@
 
 
 (define (display-objects db id)
-  (when (hash-has-key? db id)
+  (cond ((hash-has-key? db id)
     (let* ((record (hash-ref db id))
            (output (string-join record " and ")))
-      (when (not (equal? output ""))
-        (if (eq? id 'bag)
-            (printf "You are carrying ~a. \n" output)
-            (printf "You can see ~a. \n" output))))))
+      (cond ((equal? output "")
+              (printf "You can see a single thing in this room. \n"))
+            (else
+       (if (eq? id 'bag)
+                 (printf "You are carrying ~a. \n" output)
+                 (printf "You can see ~a. \n" output))))))
+        (else
+         (if (eq? id 'bag)
+             (printf "Your bag is empty!")
+             (printf "The room is empty!")))))
 
 
 
@@ -32,8 +38,9 @@
          id)))
 
 ;;ask antonio if this function is better than the other
-(define (remove-object2 db id from str)
-  (let*((newid (evaluate from 'bag id)))
+(define (remove-object db id from input)
+  (let*((str (string-join (cdr (string-split input))))
+        (newid (evaluate from 'bag id)))
     (when (hash-has-key? db newid)
       (let* ((record (hash-ref db newid))
                  (result (remove (lambda (x) (string-suffix-ci? str x)) record))
@@ -52,14 +59,13 @@
 
 
 ;;should i remove these two functions??
-(define (pick-item id input)
-  (let ((item (string-join (cdr (string-split input))))) ;;put inside remove-object function???
-    (remove-object2 objectdb id 'room item)))
+(define (handle-item from id input)
+  (if(eq? from 'bag)
+    (remove-object inventorydb id 'bag input)
+    (remove-object objectdb id 'room input)))
 
-(define (put-item id input)
-  (let ((item (string-join (cdr (string-split input)))))
-    (remove-object2 inventorydb id 'bag item)))
-;;should i remove these two functions?
+
+
 
 (define (display-inventory)
   (display-objects inventorydb 'bag))

@@ -1,6 +1,3 @@
-(define descriptions '((1 "You are in the lobby")
-                       (2 "You are in the hallway")
-                       (3 "You are in a swamp")))
 
 
 
@@ -14,8 +11,11 @@
                     (7 "pass" )))
 
 
-(define objects '((1 "a silver dagger")
-                  (1 "a gold coin")))
+(define objects '((0 "a silver dagger")
+                  (1 "a gold coin")
+                  (2 "a long sword")
+                  (3 "a rope")
+                  (4 "a key")))
 
 (define look '(((directions) look) ((look) look) ((examine room) look)))
 
@@ -32,7 +32,7 @@
 
 (define actions `(,@look ,@quit ,@pick ,@put ,@inventory))
 
-(define decisiontable `((1 ((north) 2) ((north west) 3) ,@actions)
+(define decisiontable `((1 ,@actions)
                         (2 ((south) 1) ,@actions )
                         (3 ,@actions)))
 
