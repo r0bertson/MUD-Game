@@ -23,6 +23,8 @@
 
 (define pick '(((get) pick ) ((pickup) pick) ((pick) pick)))
 
+(define directions '(((south) direction) ((north) direction) ((west) direction) ((east) direction)))
+
 ;;the put name in here is just the name of the list
 ;;the name of the action is drop, so we can change the list name to drop
 ;;to avoid confusion. i'll leave it this way to remember in the future
@@ -30,7 +32,7 @@
 
 (define inventory '(((inventory) inventory) ((bag) inventory)))
 
-(define actions `(,@look ,@quit ,@pick ,@put ,@inventory))
+(define actions `(,@look ,@quit ,@pick ,@put ,@inventory,@directions))
 
 (define decisiontable `((1 ,@actions)
                         (2 ((south) 1) ,@actions )
