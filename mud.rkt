@@ -1,7 +1,6 @@
 #lang racket
 
 (include "assoc.rkt")
-(include "directions.rkt")
 (include "objects.rkt")
 (include "maze.rkt")
 
@@ -17,10 +16,16 @@
 (define inventorydb (make-hash)) ;;define bag hash
 (define rooms (make-hash)) ;; define hash for carry the rooms names
 (define m (build-maze X Y)) ;;build the maze
+(define gatekey "")
 ;; END OF DEFINITIONS
 
 
 
+; THIS FUNCTION WILL DEFINE THE START POINT
+(define (startpoint)
+  (let*((start_x (random X))
+        (start_y (random Y)))
+  (list start_x start_y)))
 
 ;; refactored functions assq-ref and assv-ref into only one ass-ref
 ;; we pass what we want as parameter (assq or assv)
@@ -42,10 +47,13 @@
                    (add-object db (list j i) (car (ass-ref types (random (- (length types) 1)) assq))))))))))
 
 
+;will place one unit of type of key randomly on the maze
+(define (random-key-location db types)
+  (for ((i (length types)))
+    (add-object db (list (random X) (random Y)) (car (ass-ref types i assq)))))
 
 
-(random-allocator rooms room-type 100)   ;;allocate names to the rooms
-(random-allocator objectdb objects 50)   ;;allocate items to the rooms
+
 
 
 ;;get the keywords on a association table
@@ -72,17 +80,7 @@
         #f
         (list-index (lambda (x) (eq? x n)) list-of-numbers))))
 
-;deal with room changes
-;the maze is build from top left (0 0)
-(define (move-room room input)
-               (cond [(eq? input 'south)
-                      (move-x room +)]
-                     [(eq? input 'north)
-                      (move-x room -)]
-                     [(eq? input 'west)
-                      (move-y room -)]
-                     [(eq? input 'east)
-                      (move-y room +)]))
+
              
 
 ;;changed to receive a function as parameter to reuse to get keys
@@ -94,57 +92,96 @@
          ;;description in the functions
          (index (index-of-largest-number (list-of-lengths keylist tokens)))) 
     (if index 
-        (func (list-ref record index)) ;;return result
+        (func (list-ref record index)) ;;return result if match, return false if dont
         #f)))
 
 
+;;THIS FUNCTION WILL EVALUATE IF THE USER HAVE THE KEY NECESSARY TO OPEN THE GATE
+(define (door-handle gatekey)
+  (printf "You can see the exit gate, but it is locked. \n")
+  (cond ((hash-has-key? inventorydb 'bag)
+         (let* ((record (hash-ref inventorydb 'bag)) ;;get items list in bag
+                (result (remove (lambda (x) (string-suffix-ci? gatekey x)) record)) ;;result = record - bag
+                (item (lset-difference equal? record result))) ;; compare them
+           (cond ((null? item) ;;if there is no difference, the key was removed, return true
+               #t))))
+        (else
+         #f)))
+
+
+
+;;START OF ALLOCATION OF ITENS AND ROOM NAMES
+(random-allocator rooms room-type 100)       ;;allocate names to the rooms
+(random-allocator objectdb objects 50)       ;;allocate items to the rooms
+(random-key-location objectdb key_objects)   ;;allocate keys to the rooms
+;;END OF ALLOCATION
+
 ;; ADVANCED COMMAND LINE PROCESSOR WITH MAZE
-(define (startgame-maze start)
-  (let loop ((rid start))
-    (show-maze m rid)
-    (printf "You are in the ~a \n>" (hash-ref rooms rid))
-    (let* ((input (read-line))
-           (string-tokens (string-tokenize input))
-           (tokens (map string->symbol string-tokens))
-           (response (call-actions rid tokens cadr))) ;;get action
-      (cond ((eq? response 'direction)
-             (let* ((direction (call-actions rid tokens caar)) ;;get direction typed
-                   (newlocation (move-room rid direction)))  ;;get future location after move
-               (cond((member direction (paths rid)) ;check if direction is in path
-                     (cond ((equal? rid newlocation) (loop rid))
-                           ((equal? newlocation (list (- X 1) (- Y 1))) ;;end of game condition
-                            (show-maze m newlocation) ;;show maze once again
-                            (displayln "You have reached the exit door.")
-                            (exit)) ; kill
-                           (else
-                            (loop newlocation)))) ;;loop in the new location
-                    (else
-                     (printf "You can not go that way!\n")
-                     (loop rid)))))
+(define (startgame-maze)
+  (let* ((gatekey (car (ass-ref key_objects (random(length key_objects)) assq)))
+         (gate_x (random X))
+         (gate_y (random Y))
+         (start (startpoint)))
+    (printf "~a \n" gate_x)
+    (printf "~a \n" gate_y)
+    (printf "~a \n" gatekey)
+    (printf "~a \n " start)
+    (let loop ((rid start))    
+      (printf "You are in the ~a \n>" (hash-ref rooms rid))
+      (let* ((input (read-line))
+             (string-tokens (string-tokenize input))
+             (tokens (map string->symbol string-tokens))
+             (response (call-actions rid tokens cadr))) ;;get action
+
+      
+        (cond ((eq? response 'direction)
+               (let* ((direction (call-actions rid tokens caar)) ;get direction typed
+                      (newlocation (move-room rid direction)))  ;get future location after move
+                 (cond((member direction (paths rid)) ;check if direction is in path
+                       (cond ((equal? newlocation (list gate_x gate_y)) ;end of game condition
+                              (cond ((not (door-handle gatekey))
+                                     (printf "It seems that you don't have the key to open the gate. \n")
+                                     (loop newlocation))
+                                    (else
+                                     (printf "You used the key to open the gate. You are free! \n")
+                                     (exit))))
+                         (else
+                          (loop newlocation))));;not in the gate
+   
+                      (else ;;direction not in path
+                       (printf "You can not go that way!\n")
+                       (loop rid)))))
             
-            ((eq? #f response)
-             (format #t "huh? I didn't understand that!\n")
-             (loop rid))
+              ((eq? #f response)
+               (format #t "huh? I didn't understand that!\n")
+               (loop rid))
             
-            ((eq? response 'look)
-             (display-objects objectdb rid)
-             (loop rid))
+              ((eq? response 'look)
+             ;(show-maze m rid)
+               (display-objects objectdb rid)
+               (loop rid))
+              ((eq? response 'mazemap)
+               (show-maze m rid)
+             ;(display-objects objectdb rid)
+               (loop rid))
             
-            ((eq? response 'pick)
-             (handle-item 'room rid input)
-             (loop rid))
+              ((eq? response 'pick)
+             ;remove item from room and put into inventory
+               (handle-item 'room rid input)
+               (loop rid))
             
-            ((eq? response 'inventory)
-             (display-inventory)
-             (loop rid))
+              ((eq? response 'inventory)
+               (display-inventory) ;;show inventorydb
+               (loop rid))
             
-            ((eq? response 'quit)
-             (format #t "So Long, and Thanks for All the Fish...\n")
-             (exit))
+              ((eq? response 'quit)
+               (format #t "So Long, and Thanks for All the Fish...\n")
+               (exit))
             
-            ((eq? response 'drop)
-             (handle-item 'bag rid input)
-             (loop rid))))))
+              ((eq? response 'drop)
+               ;remove item from inventory and drop on the current room
+               (handle-item 'bag rid input)
+               (loop rid)))))))
 
 ;;(startgame-new start)
-;(startgame-maze start)
+(startgame-maze)

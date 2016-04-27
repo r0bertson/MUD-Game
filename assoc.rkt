@@ -15,7 +15,14 @@
                   (1 "a gold coin")
                   (2 "a long sword")
                   (3 "a rope")
-                  (4 "a key")))
+                  (4 "a key")
+                  (5 "a key")
+                  (6 "a key")))
+
+(define key_objects '((0 "a red key")
+                      (1 "a blue key")
+                      (2 "a white key")
+                      (3 "a black key")))
 
 (define look '(((directions) look) ((look) look) ((examine room) look)))
 
@@ -32,7 +39,9 @@
 
 (define inventory '(((inventory) inventory) ((bag) inventory)))
 
-(define actions `(,@look ,@quit ,@pick ,@put ,@inventory,@directions))
+(define mazemap '(((map) mazemap) ((show map) mazemap)((see map) mazemap) ((kook map) mazemap)))
+
+(define actions `(,@look ,@quit ,@pick ,@put ,@inventory,@directions,@mazemap))
 
 (define decisiontable `((1 ,@actions)
                         (2 ((south) 1) ,@actions )

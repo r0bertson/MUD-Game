@@ -1,7 +1,7 @@
 ; ; ~~~ Users config ~~~
 (define X 5)
 (define Y 5)
-(define start '(0 0))
+
 
 
 ; ; include maze algorithm with X and Y as M and N .
@@ -72,17 +72,20 @@
           (display "+---")))
     (displayln "+")))
 
-
-
+;deal with room changes
+;the maze is build from top left (0 0)
+(define (move-room room input)
+               (cond [(eq? input 'south)
+                      (move-x room +)]
+                     [(eq? input 'north)
+                      (move-x room -)]
+                     [(eq? input 'west)
+                      (move-y room -)]
+                     [(eq? input 'east)
+                      (move-y room +)]))
 
 (define (move-x room fun)
   (cons (car room) (map (lambda(x) (fun x 1)) (cdr room))))
 
 (define (move-y room fun)
   (cons (fun (car room) 1) (cdr room)))
-
-
-
-
-
-
