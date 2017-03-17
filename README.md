@@ -10,10 +10,10 @@ The maze is created using procedural generation, so as the items that it contain
 
 ### Basic commands ###
 * 'look', 'examine room' - search for lost objects in the current room
-* 'map', 'show map', 'see map' - look the map to see players current location
+* 'map', 'show map', 'see map' - look the map to see player's current location
 * 'north', 'east', 'south', 'west' - move to the desired room
 * 'inventory', 'bag' - look the items in your bag
-* 'pick item_name', 'get item_name', 'pickup item_name' - pick the item_name if it is the current room
+* 'pick item_name', 'get item_name', 'pickup item_name' - pick the item_name if it is in the current room
 * 'put item_name', 'drop item_name', 'remove item_name' - drop the item_name if one is available in your inventory
 
 
