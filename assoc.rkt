@@ -39,7 +39,7 @@
 
 (define inventory '(((inventory) inventory) ((bag) inventory)))
 
-(define mazemap '(((map) mazemap) ((show map) mazemap)((see map) mazemap) ((kook map) mazemap)))
+(define mazemap '(((map) mazemap) ((show map) mazemap)((see map) mazemap) ((look map) mazemap)))
 
 (define actions `(,@look ,@quit ,@pick ,@put ,@inventory,@directions,@mazemap))
 
