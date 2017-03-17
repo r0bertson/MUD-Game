@@ -17,6 +17,9 @@ The maze is created using procedural generation, so as the items that it contain
 * 'put item_name', 'drop item_name', 'remove item_name' - drop the item_name if one is available in your inventory
 
 
+### Screenshots ###
+
+![Screenshot](demo/mud1.png) ![Screenshot](demo/mud3.png)
 ### Need help to understand the source? ###
 
 * mail me: email@robertsonlima.com
