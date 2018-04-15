@@ -1,5 +1,4 @@
-;;this file will deal with the objects manipulations
-
+;;this file will deal with the objects manipulation
 
 (define (add-object db id object)
   (if (hash-has-key? db id)
@@ -13,7 +12,6 @@
      (add-object db (first r) (second r))) objects))
 
 ;display objects that are in the room or in the bag
-;improvements: show if the bag or room is empty
 (define (display-objects db id)
   (cond ((hash-has-key? db id)
          (let* ((record (hash-ref db id))
@@ -29,18 +27,18 @@
 
 
 
-;;check if a ==b and return 'bag or the id
-;this function is necessary avoid repetition in the
-;remove-object function;
+;;check if a equals b and return 'bag or the id
+;this function is necessary to avoid repetition in the
+;remove-object function
 (define (evaluate a b id)
   (cond ((eq? a b)
        'bag)
         (else
          id)))
 
-;;ask antonio if this function is better than the other
+
 (define (remove-object db id from input)
-  (let*((str (string-join (cdr (string-split input)))) ;;remove car (pick or drop)
+  (let*((str (string-join (cdr (string-split input)))) 
         (newid (evaluate from 'bag id))) 
     (when (hash-has-key? db newid)
       (let* ((record (hash-ref db newid))
@@ -59,13 +57,11 @@
                      (hash-set! db 'bag result)))))))))
 
 
-;;should i remove these two functions??
+
 (define (handle-item from id input)
   (if(eq? from 'bag)
     (remove-object inventorydb id 'bag input)
     (remove-object objectdb id 'room input)))
-
-
 
 
 (define (display-inventory)

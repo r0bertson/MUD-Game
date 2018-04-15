@@ -1,6 +1,3 @@
-
-
-
 (define room-type '((0 "Entrance")
                     (1 "hall")
                     (2 "hallway")
@@ -47,7 +44,4 @@
                         (2 ((south) 1) ,@actions )
                         (3 ,@actions)))
 
-
-
-;; new functions to the maze
 

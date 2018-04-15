@@ -36,7 +36,7 @@
 ;randomly allocates something to a position in the maze
 ;a rate can be applied to allocate only to some cells (rooms)
 ;for instance: if the rate is 50, a room will have 50%
-;chance of have an also random item.
+;chance of have a random item.
 (define (random-allocator db types rate)
   (for ((j X))
     (for ((i Y))
@@ -47,7 +47,7 @@
                    (add-object db (list j i) (car (ass-ref types (random (- (length types) 1)) assq))))))))))
 
 
-;will place one unit of type of key randomly on the maze
+;will place one unit of each type of key randomly on the maze
 (define (random-key-location db types)
   (for ((i (length types)))
     (add-object db (list (random X) (random Y)) (car (ass-ref types i assq)))))
@@ -56,7 +56,7 @@
 
 
 
-;;get the keywords on a association table
+;;get the keywords on association table
 (define (get-keywords id)
   (let ((keys (ass-ref decisiontable id assq)))
     (map (lambda (key) (car key)) keys)))
@@ -83,8 +83,8 @@
 
              
 
-;;changed to receive a function as parameter to reuse to get keys
-;;this function can both get the actions but also the words attached to it
+;;Receive a function as parameters so it can be reused
+;;this function can both get the actions and words attached to it
 ;;depending on the function passed
 (define (call-actions id tokens func)
   (let* ((record (ass-ref decisiontable 1 assv)) ;;get the references
@@ -122,10 +122,11 @@
          (gate_x (random X))
          (gate_y (random Y))
          (start (startpoint)))
-    (printf "~a \n" gate_x)
-    (printf "~a \n" gate_y)
-    (printf "~a \n" gatekey)
-    (printf "~a \n " start)
+   ;;the following prints will help with testing, telling the developer where the gate is located and what key is the right one
+   ;; (printf "~a \n" gate_x)
+   ;; (printf "~a \n" gate_y)
+   ;; (printf "~a \n" gatekey)
+   ;; (printf "~a \n " start)
     (let loop ((rid start))    
       (printf "You are in the ~a \n>" (hash-ref rooms rid))
       (let* ((input (read-line))
@@ -153,16 +154,16 @@
                        (loop rid)))))
             
               ((eq? #f response)
-               (format #t "huh? I didn't understand that!\n")
+               (format #t "I am sorry, but I didn't understand that!\n")
                (loop rid))
             
               ((eq? response 'look)
-             ;(show-maze m rid)
+              ;(show-maze m rid)
                (display-objects objectdb rid)
                (loop rid))
               ((eq? response 'mazemap)
                (show-maze m rid)
-             ;(display-objects objectdb rid)
+              ;(display-objects objectdb rid)
                (loop rid))
             
               ((eq? response 'pick)

@@ -1,10 +1,10 @@
-; ; ~~~ Users config ~~~
+;; ~~~ Users config ~~~
 (define X 5)
 (define Y 5)
 
 
 
-; ; include maze algorithm with X and Y as M and N .
+;; include maze algorithm with X and Y as M and N .
 
 (define (paths start)
   (match-define (maze N M tbl) m)
@@ -34,7 +34,7 @@
 (define (connected? tbl a b) (member a (connections tbl b)))
 
 ;; returns a maze of a given size
-;;build-maze :: Index Index -> Maze
+;; build-maze :: Index Index -> Maze
 (define (build-maze M N)
   (define tbl (make-hash))
   (define (visited? tbl c) (dict-has-key? tbl c))
@@ -72,7 +72,7 @@
           (display "+---")))
     (displayln "+")))
 
-;deal with room changes
+;deal with room change
 ;the maze is build from top left (0 0)
 (define (move-room room input)
                (cond [(eq? input 'south)
